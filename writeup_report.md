@@ -53,23 +53,29 @@ I borrow the model from NVIDIA's End to End Learning for Self-Driving Cars paper
 
 The model includes ELU layer after each convolutional layer and fully connected layer to introduce nonlinearity.
 
-####2. Attempts to reduce overfitting in the model
+####2. Final Model Architecture
+
+Here is a visualization of the final architecture (model.py lines 139-179)
+
+![Architecture](image/model.png)
+
+####3. Attempts to reduce overfitting in the model
 
 The model contains dropout layers in order to reduce overfitting (model.py lines 149, 154, 159 and 168). 
 
 The sample data set is separated to two different sets, 80% of data was used for generating training images, while the other 20% of data was for validation (code line 199). The model was tested by running it through the simulator and ensuring that the car could stay on the track.
 
-####3. Model parameter tuning
+####4. Model parameter tuning
 
 The model used an adam optimizer with learning rate 0.0001 when doing traing. When fine turning the model, I use learning rate 0.00001. This was emperically noted when using transfer learning.
 
-####4. Appropriate training data
+####5. Appropriate training data
 
 Training data was chosen to keep the vehicle driving on the road. The simulator recorded three images taken from left, center, and right cameras in each data. I choose images randomly between center, left and right images, with 50% probability of choosing center, and 25% probability of either left or right images. The idea of using left and right images is to teach car to recover from the left and right sides. A small angle adjustment is added to steering angle when using left or right camera images.
 
 For details about how I created the training data, see the next section. 
 
-###Model Architecture and Training Strategy
+###Model Development and Data Generation
 
 ####1. Solution Design Approach
 
@@ -81,21 +87,13 @@ I decided to use the architecture described in the Nvidia paper End to End Learn
 * Added Dropout layers to avoid overfitting
 * Implemented image cropping that remove part of top and low pixes. The ideal is that those pixels do not provide valueable information on driving angle
 
-After making these changes, the car is able to sucessfully drive around track one. Then I tested the model on track two, it failed in early turns. Increasing the number of training epochs and fine-tuning parameters did not help. After reading some posts on forum and blogs ([Kaspar blog](https://medium.com/@ksakmann/behavioral-cloning-make-a-car-drive-like-yourself-dc6021152713#.kkvdh7ig7)), I added following image processing before fed the images to model:
+After making these changes, the car is able to sucessfully drive around track one. Then I tested the model on track two, it failed in early turns. Increasing the number of training epochs and fine-tuning parameters did not help. After reading some posts on forum and blogs ([Kaspar's great blog](https://medium.com/@ksakmann/behavioral-cloning-make-a-car-drive-like-yourself-dc6021152713#.kkvdh7ig7)), I added following image processing before fed the images to model:
 
 * Random image shearing. The large portion of dataset have 0 steering angle, image shearing create a new image, and the steering angle is adjusted with sheering angle. This creats new image with different steering angle.
 * Brightness adjustment. The images from second track has much lower brightness. To teach network to handle darker images, Random brightness adjustment is applied to all images before network training.
 
-The car is able to successfully complete track two simulation after applying these two image processing steps and run the model with 30 epochs. However, to complete track two, I have to increase the throttle to 0.3, but I found the car tends to wobble on track one when using 0.3 throttle. To combat this issue, I first make the throttle in the drive.py varying linearly with steering angle ([post](https://carnd-forums.udacity.com/questions/36904752/behavioral-cloning-mysteries-)), the fomula is `throttle = max(0.2, -0.45*abs(steering_angle)+0.32)`. Then I fine tune the model without image shearing processing, and lower angle adjustment for left/right camera. After taking these two steps, the vehicle is able to move smoother on both track.
+The car is able to successfully complete track two simulation after applying these two image processing steps and run the model with 30 epochs. However, to complete track two, I have to increase the throttle to 0.3, but I found the car tends to wobble on track one when using 0.3 throttle. To combat this issue, I first make the throttle in the drive.py varying linearly with steering angle ([an idea from this post](https://carnd-forums.udacity.com/questions/36904752/behavioral-cloning-mysteries-)), the fomula is `throttle = max(0.2, -0.45*abs(steering_angle)+0.32)`. Then I fine tune the model without image shearing processing, and lower angle adjustment for left/right camera. After taking these two steps, the vehicle is able to move smoother on both track.
 
-
-####2. Final Model Architecture
-
-The final model architecture (model.py lines 139-179) consisted of a convolution neural network with the following layers and layer sizes ...
-
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
-
-![alt text][image1]
 
 ####3. Creation of the Training Set & Training Process
 
