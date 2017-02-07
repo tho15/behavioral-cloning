@@ -6,7 +6,7 @@
 * Train and validate the model with a training and validation set
 * Test that the model successfully drives around track one without leaving the road
 * Train the model on track one driving data and test it on track two
-###Results
+##Results
 I tried to collect data from the simulator which I navigated using keyboard, but it was difficult to generate a smooth driving. The model does not perform well with the dataset. Later I only use the sample dataset from Udacity project site. By training on the sample dataset, my model works on both tracks even though the dataset only consist data from track one.
 
 [//]: # (Image References)
