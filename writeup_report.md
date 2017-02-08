@@ -117,7 +117,7 @@ After crop operation, we changed image's brightness by appling gamma correction.
 
 cropped image | brightness changed image
 --------------|-------------------------
-![cropped](image/cropped.jpg) | ![gamma](image/rndgamma.jpg)
+![cropped](image/cropped.jpg) | ![gamma](image/gamma.jpg)
 
 The final stop is to rescal the image to 64x64 to reduce training time. Before train, I randomly shuffled the data set and put 20% of the data into a validation set. 
 
