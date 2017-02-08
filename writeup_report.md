@@ -5,10 +5,10 @@
 * Build, a convolution neural network in Keras that predicts steering angles from images
 * Train and validate the model with a training and validation set
 * Test that the model successfully drives around track one without leaving the road
-* Train the model on track one driving data and test it on track two
+* Train the model on data set from track one and test it on track two
 
 ##Results
-I tried to collect data from the simulator which I navigated using keyboard, but it was difficult to generate a smooth driving. The model does not perform well with the dataset. Later I only use the sample dataset from Udacity project site. By training on the sample dataset, my model works on both tracks even though the dataset only consist data from track one.
+I tried to collect data from the simulator which I navigated using keyboard, but it was difficult to generate a smooth driving. The model does not perform well with my own dataset. Later I only use the sample dataset from Udacity project site for training my model. By training on the sample dataset, my model is able to drive successfully around both track one and two without leaving the road.
 
 ## Rubric Points
 
@@ -39,7 +39,7 @@ The code in model.py (line 86-130) uses a Python generator, which randomly sampl
 
 ####1. An appropriate model arcthiecture has been employed
 
-I borrow the model from NVIDIA's End to End Learning for Self-Driving Cars paper. The network consists of 9 layers, including a normalization layer, 5 convolutional layers and 3 fully connected layers. The first layer of the network performs image normalization using Keras lambda layer (code line 139). The model uses strided convolutions in the first three convolutional layers with a 2×2 stride and a 5×5 kernel, and a non-strided convolution with a 3×3 kernel size in the last two convolutional layers. Maxpooling layer is added after first four convolutional layers. Follow the five convolutional layers are four fully connected layers (1164, 100, 50, 10) leading to an output angle.
+I borrow the model from NVIDIA's End to End Learning for Self-Driving Cars paper. The network consists of 10 layers, including a normalization layer, 5 convolutional layers and 4 fully connected layers. The first layer of the network performs image normalization using Keras lambda layer (code line 139). The model uses strided convolutions in the first three convolutional layers with a 2×2 stride and a 5×5 kernel, and a non-strided convolution with a 3×3 kernel size in the last two convolutional layers. Maxpooling layer is added after first four convolutional layers. Follow the five convolutional layers are four fully connected layers (1164, 100, 50, 10) leading to an output angle.
 
 The model includes ELU layer after each convolutional layer and fully connected layer to introduce nonlinearity.
 
@@ -58,7 +58,7 @@ The sample data set is separated to two different sets, 80% of data was used for
 
 ####4. Model parameter tuning
 
-The model used an adam optimizer with learning rate 0.0001 when doing traing. When fine turning the model, I use learning rate 0.00001. This was emperically noted when using transfer learning.
+The model uses an adam optimizer with learning rate 0.0001 when doing traing. When fine turning the model, I use learning rate 0.00001. This was emperically noted when using transfer learning.
 
 ####5. Appropriate training data
 
@@ -74,7 +74,7 @@ I started with a model that consists two convolutional layers and three fully co
 
 I decided to use the architecture described in the Nvidia paper End to End Learning for Self-Driving Cars. This model resulted in a much lower mean squared error comparing to my first one, and it performed much better on my first test in simulation. However it did not handle the sharp turn well. To further improve the model, I took following steps:
 
-* Added Maxpooling layer follow the first 4 convolutional layers
+* Added Maxpooling layer following each of the first 4 convolutional layers
 * Added Dropout layers to avoid overfitting
 * Implemented image cropping that remove part of top and low pixes. The ideal is that those pixels do not provide valueable information on driving angle
 
@@ -83,19 +83,19 @@ After making these changes, the car is able to sucessfully drive around track on
 * Random image shearing. The large portion of dataset have zero steering angle, image shearing create a new image, and the steering angle is adjusted with sheering angle. This creats new image with different steering angle.
 * Brightness adjustment. The images from second track has much lower brightness. To teach network to handle darker images, Random brightness adjustment is applied to all images before network training.
 
-The car is able to successfully complete track two simulation after applying these two image processing steps and run the model with 30 epochs. However, to complete track two, I have to increase the throttle to 0.3, but I found the car tends to wobble on track one when using 0.3 throttle. To combat this issue, I first make the throttle in the drive.py varying linearly with steering angle ([an idea from this post](https://carnd-forums.udacity.com/questions/36904752/behavioral-cloning-mysteries-)), the fomula is `throttle = max(0.2, -0.45*abs(steering_angle)+0.32)`. Then I fine tune the model without image shearing processing, and lower angle adjustment for left/right camera. After taking these two steps, the vehicle is able to move smoother on both track.
+The car is able to successfully complete track two simulation after applying these two image processing steps and run the model with 30 epochs. However, to complete track two, I have to increase the throttle to 0.3, but I found the car tends to wobble on track one when using 0.3 throttle. To combat this issue, I first made the throttle in the drive.py varying linearly with steering angle ([an idea from this post](https://carnd-forums.udacity.com/questions/36904752/behavioral-cloning-mysteries-)), the fomula is `throttle = max(0.2, -0.45*abs(steering_angle)+0.32)`. Then I fine tune the model without image shearing processing, and with lower angle adjustment for left/right camera. After taking these two steps, the vehicle is able to move smoother on both track.
 
 
 ####3. Creation of the Training Set & Training Process
 
-The training set is based on the sample training data from Udacity. The original training set consists of 8036 record, each record has 3 images that captured by center, left and right camera. Here is an example record of images:
+The training set is based on the sample training data from Udacity. The original training set consists of 8036 records, each record has 3 images that captured by center, left and right camera. Here is an example record of images:
 
 center | left | right
 -------|------|-------
 ![center](image/center.jpg) | ![left](image/left.jpg) | ![right](image/right.jpg)
 
 
-The majority of steering angles in the dataset are zeros. The zero steering angle will bia the car to drive straight. To train on a more balanced dataset, one way is to use left/right images, and modify the steering angle. When selected image for training, 50% images are selected from left or right record images. Another solution is to apply image shearing and adjust the steering angle proportional to shearing angle. This operation create a new distorted image with non-zero steering angle. The image shearing is applied to train image with 50% probablity in the first step of image processing. Here is the sample of sheared image:
+The majority of steering angles in the dataset are zeros. The zero steering angle will bia the car to drive straight. To train on a more balanced dataset, one way is to use left/right images, and modify the steering angle. When selected image for training, 50% images are selected from left or right record images. Another solution is to apply image shearing and adjust the steering angle proportional to shearing angle. This operation creates a new distorted image with non-zero steering angle. The image shearing is applied to train image with 50% probablity in the first step of image processing. Here is the sample of sheared image:
 
 input image | sheared image
 ------------|--------------
@@ -113,7 +113,7 @@ input image | cropped image
 ------------|--------------
 ![center](image/center.jpg) | ![flipped](image/cropped.jpg)
 
-After crop operation, we changed image's brightness by appling gamma correction. Following figures show image after brightness change:
+After crop operation, we changed image's brightness by appling gamma correction. Following figures show image after a random brightness change:
 
 cropped image | brightness changed image
 --------------|-------------------------
