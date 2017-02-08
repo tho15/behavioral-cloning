@@ -10,16 +10,6 @@
 ##Results
 I tried to collect data from the simulator which I navigated using keyboard, but it was difficult to generate a smooth driving. The model does not perform well with the dataset. Later I only use the sample dataset from Udacity project site. By training on the sample dataset, my model works on both tracks even though the dataset only consist data from track one.
 
-[//]: # (Image References)
-
-[image1]: ./examples/placeholder.png "Model Visualization"
-[image2]: ./examples/placeholder.png "Grayscaling"
-[image3]: ./examples/placeholder_small.png "Recovery Image"
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
-[image6]: ./examples/placeholder_small.png "Normal Image"
-[image7]: ./examples/placeholder_small.png "Flipped Image"
-
 ## Rubric Points
 
 ###Files Submitted & Code Quality
@@ -59,6 +49,7 @@ Here is a visualization of the final architecture (model.py lines 139-179)
 
 ![Architecture](image/model.png)
 
+
 ####3. Attempts to reduce overfitting in the model
 
 The model contains dropout layers in order to reduce overfitting (model.py lines 149, 154, 159 and 168). 
@@ -87,9 +78,9 @@ I decided to use the architecture described in the Nvidia paper End to End Learn
 * Added Dropout layers to avoid overfitting
 * Implemented image cropping that remove part of top and low pixes. The ideal is that those pixels do not provide valueable information on driving angle
 
-After making these changes, the car is able to sucessfully drive around track one. Then I tested the model on track two, it failed in early turns. Increasing the number of training epochs and fine-tuning parameters did not help. After reading some posts on forum and blogs ([Kaspar's great blog](https://medium.com/@ksakmann/behavioral-cloning-make-a-car-drive-like-yourself-dc6021152713#.kkvdh7ig7)), I added following image processing before fed the images to model:
+After making these changes, the car is able to sucessfully drive around track one. Then I tested the model on track two, it failed in early turns. Increasing the number of training epochs and fine-tuning parameters did not help. After reading some posts on forum and blogs ([Kaspar's nice blog](https://medium.com/@ksakmann/behavioral-cloning-make-a-car-drive-like-yourself-dc6021152713#.kkvdh7ig7)), I added following image processing before fed the images to model:
 
-* Random image shearing. The large portion of dataset have 0 steering angle, image shearing create a new image, and the steering angle is adjusted with sheering angle. This creats new image with different steering angle.
+* Random image shearing. The large portion of dataset have zero steering angle, image shearing create a new image, and the steering angle is adjusted with sheering angle. This creats new image with different steering angle.
 * Brightness adjustment. The images from second track has much lower brightness. To teach network to handle darker images, Random brightness adjustment is applied to all images before network training.
 
 The car is able to successfully complete track two simulation after applying these two image processing steps and run the model with 30 epochs. However, to complete track two, I have to increase the throttle to 0.3, but I found the car tends to wobble on track one when using 0.3 throttle. To combat this issue, I first make the throttle in the drive.py varying linearly with steering angle ([an idea from this post](https://carnd-forums.udacity.com/questions/36904752/behavioral-cloning-mysteries-)), the fomula is `throttle = max(0.2, -0.45*abs(steering_angle)+0.32)`. Then I fine tune the model without image shearing processing, and lower angle adjustment for left/right camera. After taking these two steps, the vehicle is able to move smoother on both track.
@@ -97,29 +88,38 @@ The car is able to successfully complete track two simulation after applying the
 
 ####3. Creation of the Training Set & Training Process
 
-To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
+The training set is based on the sample training data from Udacity. The original training set consists of 8036 record, each record has 3 images that captured by center, left and right camera. Here is an example record of images:
 
-![alt text][image2]
-
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
-
-![alt text][image3]
-![alt text][image4]
-![alt text][image5]
-
-Then I repeated this process on track two in order to get more data points.
-
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
-
-![alt text][image6]
-![alt text][image7]
-
-Etc ....
-
-After the collection process, I had X number of data points. I then preprocessed this data by ...
+center | left | right
+-------|------|-------
+![center](image/center.jpg) | ![left](image/left.jpg) | ![right](image/right.jpg)
 
 
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
+The majority of steering angles in the dataset are zeros. The zero steering angle will bia the car to drive straight. To train on a more balanced dataset, one way is to use left/right images, and modify the steering angle. When selected image for training, 50% images are selected from left or right record images. Another solution is to apply image shearing and adjust the steering angle proportional to shearing angle. This operation create a new distorted image with non-zero steering angle. The image shearing is applied to train image with 50% probablity in the first step of image processing. Here is the sample of sheared image:
 
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+input image | sheared image
+------------|--------------
+![center](image/center.jpg) | ![sheared](image/sheared.jpg)
+
+The training track one has more left turning curves than right ones. To train our model for a more general driving track, our second step is to randomly flipped images and angles with probability of 50%. Following shows the flipped image with original one:
+
+left image | flipped image
+-----------|--------------
+![left](image/left.jpg) | ![flipped](image/flipped.jpg)
+
+The next step of image augmentation is to crop image. I remove the top 54 pixels and bottom 25 pixels. The following figures show the result of a cropped image:
+
+input image | cropped image
+------------|--------------
+![center](image/center.jpg) | ![flipped](image/cropped.jpg)
+
+After crop operation, we changed image's brightness by appling gamma correction. Following figures show image after brightness change:
+
+cropped image | brightness changed image
+--------------|-------------------------
+![cropped](image/cropped.jpg) | ![gamma](image/rndgamma.jpg)
+
+The final stop is to rescal the image to 64x64 to reduce training time. Before train, I randomly shuffled the data set and put 20% of the data into a validation set. 
+
+The ideal number of epochs was 30 for first training, which I found by running the training in 5, 10, 20, 30 and 50 epochs. After running first training, I fine turned the model as discussed in the previous section.
 
